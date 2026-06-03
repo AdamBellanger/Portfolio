@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // ═══════════════════════════════════════════════════════════════════════════════
 //  FORMULAIRE DE CONTACT
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -107,27 +107,29 @@ function veille_get_live(array $keywords): ?array {
   // Vérification du cache
   if (file_exists(VEILLE_CACHE) && (time() - filemtime(VEILLE_CACHE)) < VEILLE_TTL) {
     $c = json_decode(file_get_contents(VEILLE_CACHE), true);
-    if (is_array($c) && count($c) >= 4) return $c;
+    if (is_array($c) && count($c) >= 4) return array_slice($c, 0, 6);
   }
 
   $feeds = [
-    ['url' => 'https://www.cert.ssi.gouv.fr/feed/',    'label' => 'ANSSI CERT'],
-    ['url' => 'https://www.numerama.com/feed/',         'label' => 'Numerama'],
-    ['url' => 'https://www.01net.com/rss/actualites/',  'label' => '01net'],
-    ['url' => 'https://www.lemondeinformatique.fr/flux-rss/thematique/toutes-les-actualites/rss.xml', 'label' => 'LMI'],
+    ['url' => 'https://www.cert.ssi.gouv.fr/feed/',                                                   'label' => 'ANSSI CERT'],
+    ['url' => 'https://www.it-connect.fr/feed/',                                                       'label' => 'IT-Connect'],
+    ['url' => 'https://www.silicon.fr/feed',                                                           'label' => 'Silicon.fr'],
+    ['url' => 'https://www.numerama.com/feed/',                                                        'label' => 'Numerama'],
+    ['url' => 'https://www.01net.com/rss/actualites/',                                                 'label' => '01net'],
+    ['url' => 'https://www.lemondeinformatique.fr/flux-rss/thematique/toutes-les-actualites/rss.xml',  'label' => 'LMI'],
+    ['url' => 'https://www.zdnet.fr/feeds/rss/actualites/',                                            'label' => 'ZDNet France'],
   ];
 
-  $articles        = [];
-  $used_categories = [];
+  $articles = [];
 
   foreach ($feeds as $feed) {
-    if (count($articles) >= 4) break;
+    if (count($articles) >= 6) break;
     $xml = veille_fetch_rss($feed['url']);
     if (!$xml) continue;
 
     $items = isset($xml->channel->item) ? $xml->channel->item : [];
     foreach ($items as $item) {
-      if (count($articles) >= 4) break;
+      if (count($articles) >= 6) break;
 
       $title    = trim((string)$item->title);
       $desc_raw = strip_tags((string)($item->description ?? $item->summary ?? ''));
@@ -138,8 +140,6 @@ function veille_get_live(array $keywords): ?array {
       if (empty($title)) continue;
 
       $cat = veille_categorize($title . ' ' . $desc_raw, $keywords);
-      if (in_array($cat[0], $used_categories)) continue; // 1 par catégorie
-      $used_categories[] = $cat[0];
 
       $articles[] = [
         'accent'   => $cat[1],
@@ -148,27 +148,30 @@ function veille_get_live(array $keywords): ?array {
         'date'     => $pub ? date('d/m/Y', strtotime($pub)) : date('d/m/Y'),
         'title'    => $title,
         'source'   => $feed['label'],
-        'desc'     => mb_strlen($desc_raw) > 200 ? mb_substr($desc_raw, 0, 197) . '…' : $desc_raw,
+        'desc'     => mb_strlen($desc_raw) > 110 ? mb_substr($desc_raw, 0, 107) . '…' : $desc_raw,
         'desc_full'=> $desc_raw,
         'link'     => $link,
       ];
+      break; // 1 seul article par source/feed
     }
   }
 
   if (count($articles) >= 4) {
     if (!is_dir(dirname(VEILLE_CACHE))) mkdir(dirname(VEILLE_CACHE), 0755, true);
-    file_put_contents(VEILLE_CACHE, json_encode(array_slice($articles, 0, 4), JSON_UNESCAPED_UNICODE));
-    return array_slice($articles, 0, 4);
+    file_put_contents(VEILLE_CACHE, json_encode(array_slice($articles, 0, 6), JSON_UNESCAPED_UNICODE));
+    return array_slice($articles, 0, 6);
   }
   return null;
 }
 
 // ── Fallback statique (si RSS indisponible) ────────────────────────────────────
 $veille_fallback = [
-  ['accent'=>'#ff4757','icon'=>'fa-shield-alt','category'=>'Cybersécurité','date'=>'2026','title'=>'Zero Trust Architecture','source'=>'ANSSI','desc'=>'Approche "ne jamais faire confiance, toujours vérifier" qui remplace le modèle périmétrique traditionnel. Pertinente dans un contexte de télétravail et d\'accès cloud.','desc_full'=>'Approche "ne jamais faire confiance, toujours vérifier" qui remplace le modèle périmétrique traditionnel. Pertinente dans un contexte de télétravail et d\'accès cloud.','link'=>''],
-  ['accent'=>'#00d4ff','icon'=>'fa-wifi','category'=>'Réseau','date'=>'2026','title'=>'Wi-Fi 7 (802.11be)','source'=>'ZDNet France','desc'=>'Nouvelle génération Wi-Fi avec des débits théoriques jusqu\'à 46 Gbps et une latence très réduite. Impact direct sur les déploiements réseau en entreprise.','desc_full'=>'Nouvelle génération Wi-Fi avec des débits théoriques jusqu\'à 46 Gbps et une latence très réduite. Impact direct sur les déploiements réseau en entreprise.','link'=>''],
-  ['accent'=>'#a855f7','icon'=>'fa-server','category'=>'Virtualisation','date'=>'2026','title'=>'Proxmox VE & Conteneurisation','source'=>'LeMagIT','desc'=>'Montée en puissance de Proxmox comme alternative open source à VMware suite au rachat par Broadcom. Couplé à Docker/LXC pour une gestion flexible des workloads.','desc_full'=>'Montée en puissance de Proxmox comme alternative open source à VMware suite au rachat par Broadcom. Couplé à Docker/LXC pour une gestion flexible des workloads.','link'=>''],
-  ['accent'=>'#f97316','icon'=>'fa-cloud','category'=>'Cloud','date'=>'2026','title'=>'SASE & SD-WAN en entreprise','source'=>'Le Monde Informatique','desc'=>'Convergence du réseau et de la sécurité via le modèle SASE. Les entreprises migrent vers des architectures SD-WAN pour plus d\'agilité.','desc_full'=>'Convergence du réseau et de la sécurité via le modèle SASE. Les entreprises migrent vers des architectures SD-WAN pour plus d\'agilité.','link'=>''],
+  ['accent'=>'#ff4757','icon'=>'fa-shield-alt','category'=>'Cybersécurité','date'=>'2026','title'=>'Zero Trust Architecture — Le nouveau standard','source'=>'ANSSI','desc'=>'Approche "ne jamais faire confiance, toujours vérifier" qui remplace le modèle périmétrique. Indispensable avec la généralisation du télétravail et de l\'accès cloud hybride.','desc_full'=>'Le modèle Zero Trust impose une vérification systématique de chaque accès, même depuis le réseau interne. Il s\'appuie sur la micro-segmentation, l\'authentification forte (MFA) et le principe du moindre privilège. L\'ANSSI recommande son adoption progressive dans les SI critiques.','link'=>'https://www.ssi.gouv.fr'],
+  ['accent'=>'#00d4ff','icon'=>'fa-network-wired','category'=>'Réseau','date'=>'2026','title'=>'Wi-Fi 7 (802.11be) débarque en entreprise','source'=>'ZDNet France','desc'=>'Débits théoriques jusqu\'à 46 Gbps, latence ultra-réduite et MLO (Multi-Link Operation). Impact direct sur les déploiements réseau en open-space et salles de réunion.','desc_full'=>'Le Wi-Fi 7 introduit la technologie MLO permettant d\'agréger plusieurs bandes fréquentielles simultanément (2,4/5/6 GHz). Associé à 4096-QAM et des canaux 320 MHz, il ouvre la voie aux usages temps réel (vidéoconférence 8K, AR/VR d\'entreprise) sans câblage.','link'=>''],
+  ['accent'=>'#a855f7','icon'=>'fa-server','category'=>'Virtualisation','date'=>'2026','title'=>'Proxmox vs VMware : la migration s\'accélère','source'=>'LeMagIT','desc'=>'Depuis le rachat de VMware par Broadcom et la hausse des licences, de nombreuses entreprises migrent vers Proxmox VE. L\'écosystème Docker/LXC complète la solution open source.','desc_full'=>'Proxmox VE 8.x intègre nativement la haute disponibilité (cluster Corosync), la réplication ZFS et la gestion des conteneurs LXC. Sa gratuité et sa communauté active en font un choix stratégique pour les PME et administrations souhaitant s\'affranchir des coûts VMware.','link'=>''],
+  ['accent'=>'#f97316','icon'=>'fa-cloud','category'=>'Cloud','date'=>'2026','title'=>'SASE & SD-WAN : la convergence réseau-sécurité','source'=>'Le Monde Informatique','desc'=>'Le modèle SASE fusionne les fonctions réseau (SD-WAN) et sécurité (CASB, SWG, ZTNA) dans une architecture cloud-native. Standard émergent pour les entreprises multi-sites.','desc_full'=>'SASE (Secure Access Service Edge) permet de délivrer des services réseau et de sécurité depuis le cloud, au plus près des utilisateurs. Il réduit la latence, simplifie la gestion et améliore la visibilité. Les grands acteurs : Palo Alto Prisma, Cisco Umbrella, Zscaler.','link'=>''],
+  ['accent'=>'#22c55e','icon'=>'fa-linux','category'=>'Systèmes','date'=>'2026','title'=>'Durcissement Linux : les bonnes pratiques 2026','source'=>'ANSSI','desc'=>'Hardening d\'un serveur Debian/Ubuntu : désactivation des services inutiles, SSH par clé uniquement, fail2ban, auditd et SELinux/AppArmor. Checklist maintenue par l\'ANSSI.','desc_full'=>'Le guide ANSSI de configuration GNU/Linux recommande : mise à jour automatique des paquets de sécurité, restriction des droits sudo, chiffrement des partitions sensibles, monitoring des connexions avec auditd. Ces pratiques s\'appliquent directement aux serveurs Hetzner et on-premise.','link'=>'https://www.ssi.gouv.fr'],
+  ['accent'=>'#e879f9','icon'=>'fa-robot','category'=>'IA & Infra','date'=>'2026','title'=>'AIOps : l\'IA s\'invite dans l\'administration réseau','source'=>'01net','desc'=>'Les outils AIOps analysent en temps réel les logs, métriques et flux réseau pour prédire les pannes, détecter les anomalies et automatiser les remédiations. Cisco et Juniper sont en première ligne.','desc_full'=>'AIOps combine machine learning et big data pour superviser les infrastructures à grande échelle. Cisco AI Network Analytics (intégré à DNA Center) et Juniper Mist utilisent des modèles ML pour corréler les événements réseau, réduire le MTTR et anticiper les dégradations avant qu\'elles n\'affectent les utilisateurs.','link'=>''],
 ];
 
 // ── Résolution finale ──────────────────────────────────────────────────────────
@@ -427,11 +430,93 @@ $update_label = file_exists(VEILLE_CACHE)
       </div>
     </div>
   </div>
+  <div id="modal-teledesk" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal">&times;</button>
+      <div class="modal-body">
+        <h2>TeleDesk</h2>
+        <div class="modal-tags">
+          <span class="modal-tag">Python</span>
+          <span class="modal-tag">GMAO</span>
+          <span class="modal-tag">Interface GUI</span>
+          <span class="modal-tag">Bob! Desk</span>
+        </div>
+        <p>
+          Outil d'import automatique d'équipements téléphonie et réseau vers <strong>Bob! Desk</strong>, le logiciel GMAO utilisé en entreprise.
+        </p>
+        <p>
+          <strong>Fonctionnalités :</strong><br>
+          – Interface graphique moderne avec drag &amp; drop de fichiers CSV/Excel.<br>
+          – Parsing et validation automatique des données équipements.<br>
+          – Import en masse vers la GMAO via API ou base de données.<br>
+          – Logs d'import et gestion des erreurs en temps réel.
+        </p>
+        <a href="https://github.com/AdamBellanger/TeleDesk" target="_blank" rel="noreferrer" class="btn-modal">
+          <i class="fab fa-github"></i> Explorer sur GitHub
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-serveur" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal">&times;</button>
+      <div class="modal-body">
+        <h2>Serveur-Production</h2>
+        <div class="modal-tags">
+          <span class="modal-tag">Shell / Bash</span>
+          <span class="modal-tag">Linux</span>
+          <span class="modal-tag">Nginx</span>
+          <span class="modal-tag">Hetzner</span>
+        </div>
+        <p>
+          Collection de scripts Shell pour configurer, sécuriser et administrer un serveur Linux en production chez Hetzner.
+        </p>
+        <p>
+          <strong>Contenu :</strong><br>
+          – Scripts d'installation et configuration Nginx + PHP-FPM.<br>
+          – Mise en place automatique de Nginx Proxy Manager.<br>
+          – Durcissement SSH, pare-feu UFW et fail2ban.<br>
+          – Scripts de sauvegarde et monitoring basique.
+        </p>
+        <a href="https://github.com/AdamBellanger/Serveur-Production" target="_blank" rel="noreferrer" class="btn-modal">
+          <i class="fab fa-github"></i> Explorer sur GitHub
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-bigfive" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal">&times;</button>
+      <div class="modal-body">
+        <h2>OutoffService Big Five</h2>
+        <div class="modal-tags">
+          <span class="modal-tag">JavaScript</span>
+          <span class="modal-tag">HTML/CSS</span>
+          <span class="modal-tag">Refonte web</span>
+        </div>
+        <p>
+          Refonte complète du site web OutoffService Big Five. Redesign moderne, responsive et optimisé.
+        </p>
+        <p>
+          <strong>Réalisations :</strong><br>
+          – Nouveau design moderne avec animations CSS fluides.<br>
+          – Interface responsive adaptée mobile et desktop.<br>
+          – Optimisation des performances et de l'accessibilité.
+        </p>
+        <a href="https://github.com/AdamBellanger/OutoffServiceBigFive" target="_blank" rel="noreferrer" class="btn-modal">
+          <i class="fab fa-github"></i> Explorer sur GitHub
+        </a>
+      </div>
+    </div>
+  </div>
+
   <!-- NAVIGATION -->
   <nav class="github-pill delayed-entry">
     <div class="nav-marker"></div>
     <a href="#accueil" class="nav-link active">Accueil</a>
-    <a href="#apropos" class="nav-link">À propos</a>
+    <a href="#apropos" class="nav-link">Qui suis-je</a>
     <a href="#parcours" class="nav-link">Mon Parcours</a>
     <a href="#competences-1" class="nav-link">Logiciel &amp; Outils</a>
     <a href="#projets" class="nav-link">Projets</a>
@@ -472,23 +557,34 @@ $update_label = file_exists(VEILLE_CACHE)
   <!-- À PROPOS -->
   <section id="apropos" class="delayed-entry">
     <div class="container">
-      <div class="content-box">
-        <h2>À propos</h2>
+      <div class="content-box apropos-box">
+        <span class="section-label" style="text-align:center;display:block;">Qui suis-je</span>
         <p>
-          Actuellement étudiant en première année de BTS SIO (option SISR) en alternance au campus IRIS Rouen, 
-          je cultive un profil hybride entre l'administration système et le développement. 
-          Passionné par l'écosystème des réseaux, je me spécialise dans le déploiement d'infrastructures Cisco, 
-          la virtualisation et la sécurité des environnements Windows et Linux.
+          Étudiant en <strong>BTS SIO option SISR</strong> en alternance au campus IRIS Rouen, je développe un profil
+          à double compétence — <strong>infrastructure IT</strong> et <strong>développement web</strong>.
         </p>
         <p>
-          Mon expertise s'étend également au développement. Côté <strong>Front-end</strong>, je m'attache à créer des 
-          interfaces immersives et performantes en utilisant des technologies comme Three.js et des animations CSS avancées 
-          pour offrir une expérience utilisateur fluide. Côté <strong>Back-end</strong>, je maîtrise la logique serveur 
-          avec PHP et la gestion de bases de données MySQL, tout en utilisant Python pour l'automatisation de tâches techniques.
+          Côté <strong>infrastructure</strong>, j'interviens quotidiennement chez <strong>Socacom</strong> sur des missions
+          concrètes : déploiement et configuration d'équipements <strong>Cisco</strong> et <strong>Huawei</strong>,
+          mise en place de VLANs, administration de systèmes <strong>Windows Server</strong> et <strong>Linux</strong>,
+          virtualisation sous <strong>Proxmox</strong> et <strong>VMware</strong>, et gestion de la téléphonie
+          d'entreprise (<strong>Alcatel OXO</strong>, <strong>VoIP/SIP</strong>, <strong>Centrex UnyCX</strong>).
         </p>
         <p>
-          Mon rythme en alternance chez Socacom me permet de confronter quotidiennement la théorie à la réalité du terrain, 
-          développant ainsi une forte réactivité face aux incidents et une volonté constante d'optimisation des systèmes d'information.
+          Côté <strong>développement</strong>, je conçois des interfaces web immersives (React, Three.js, animations CSS)
+          et des backends robustes en <strong>PHP/MySQL</strong>, avec Python pour l'automatisation et les scripts systèmes.
+          J'administre également mon propre serveur de production <strong>Hetzner</strong> sous Nginx.
+        </p>
+        <p>
+          J'administre également mon propre <strong>serveur de production Hetzner</strong> sous Linux :
+          déploiement de services conteneurisés avec <strong>Docker</strong> et <strong>Docker Compose</strong>,
+          reverse proxy via <strong>Nginx Proxy Manager</strong>, gestion des certificats SSL,
+          surveillance des logs et automatisation des sauvegardes par scripts Bash.
+          Un environnement que je fais évoluer en continu, de l'infra au déploiement applicatif.
+        </p>
+        <p>
+          L'alternance me permet de confronter chaque jour théorie et terrain, en développant une vraie réactivité
+          face aux incidents et une vision globale des systèmes d'information.
         </p>
       </div>
     </div>
@@ -496,86 +592,70 @@ $update_label = file_exists(VEILLE_CACHE)
 
   <!-- PARCOURS -->
   <section id="parcours" class="delayed-entry">
-    <div class="parcours-container">
-      <div class="titre-parcours">
-        <h1 style="font-size: 3.5rem; color: #00d4ff; line-height: 1; margin: 0;">
-          Mon<br>Parcours
-        </h1>
-      </div>
+    <div class="container">
+      <div class="parcours-container">
+        <span class="section-label">Mon parcours</span>
+        <h2>Formation &amp; Expérience</h2>
 
-      <div class="glass-bubble">
+        <div class="tl-switch" id="tl-switch">
+          <div class="tl-switch-bg"></div>
+          <button class="tl-switch-opt active" data-tab="formation">
+            <i class="fas fa-graduation-cap"></i> Formation
+          </button>
+          <button class="tl-switch-opt" data-tab="experience">
+            <i class="fas fa-briefcase"></i> Expérience
+          </button>
+        </div>
 
         <!-- FORMATION -->
-        <div>
-          <h3 style="color: #00d4ff; font-size: 1.5rem; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-            <i class="fas fa-graduation-cap"></i> FORMATION
-          </h3>
-
-          <div style="margin-bottom: 25px; padding-left: 20px; border-left: 3px solid #00d4ff;">
-            <strong style="font-size: 1.1rem;">IRIS – École supérieure d'informatique</strong><br>
-            <span style="color: rgba(255,255,255,0.9);">BTS SIO, Services Informatiques aux Organisations</span><br>
-            <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">2025 – 2027</span>
+        <div id="tl-formation" class="timeline-v2">
+          <div class="tl-item current">
+            <span class="tl-role">IRIS – École supérieure d'informatique</span>
+            <span class="tl-company">BTS SIO, Services Informatiques aux Organisations</span>
+            <span class="tl-period">2025 – 2027</span>
           </div>
-
-          <div style="margin-bottom: 25px; padding-left: 20px; border-left: 3px solid #00d4ff;">
-            <strong style="font-size: 1.1rem;">Campus La Chataigneraie</strong><br>
-            <span style="color: rgba(255,255,255,0.9);">Baccalauréat professionnel, système numérique</span><br>
-            <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Sept. 2022 – Juil. 2025</span><br>
-            <span style="color: #ffd700; font-size: 0.9rem;"><i class="fas fa-star"></i> Mention Bien</span>
+          <div class="tl-item">
+            <span class="tl-role">Campus La Chataigneraie</span>
+            <span class="tl-company">Baccalauréat professionnel, système numérique</span>
+            <span class="tl-period">Sept. 2022 – Juil. 2025</span>
+            <span class="tl-mention"><i class="fas fa-star" style="font-size:.65rem"></i> Mention Bien</span>
           </div>
-
-          <div style="margin-bottom: 10px; padding-left: 20px; border-left: 3px solid #00d4ff;">
-            <strong style="font-size: 1.1rem;">Collège Saint Victrice</strong><br>
-            <span style="color: rgba(255,255,255,0.9);">Diplôme National du Brevet</span><br>
-            <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Sept. 2017 – Juil. 2022</span><br>
-            <span style="color: #ffd700; font-size: 0.9rem;"><i class="fas fa-star"></i> Mention Bien</span>
+          <div class="tl-item">
+            <span class="tl-role">Collège Saint Victrice</span>
+            <span class="tl-company">Diplôme National du Brevet</span>
+            <span class="tl-period">Sept. 2017 – Juil. 2022</span>
+            <span class="tl-mention"><i class="fas fa-star" style="font-size:.65rem"></i> Mention Bien</span>
           </div>
         </div>
-
-        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 40px 0;">
 
         <!-- EXPÉRIENCE -->
-        <div>
-          <h3 style="color: #ff6b35; font-size: 1.5rem; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-            <i class="fas fa-briefcase"></i> EXPÉRIENCE PROFESSIONNELLE
-          </h3>
-
-          <div style="margin-bottom: 25px; padding-left: 20px; border-left: 3px solid #ff6b35;">
-            <strong style="font-size: 1.1rem; color: #fff;">Apprenti – Contrat en alternance</strong><br>
-            <span style="color: #00d4ff; font-weight: 600;">Socacom</span>
-            – <span style="font-style: italic;">Entreprise de télécommunication en Normandie</span><br>
-            <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Sept. 2025 – En cours · 6 mois</span><br>
-            <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">Rouen, Normandie, France</span>
+        <div id="tl-experience" class="timeline-v2" style="display:none">
+          <div class="tl-item current">
+            <span class="tl-role">Apprenti – Contrat en alternance</span>
+            <span class="tl-company">Socacom <em style="color:rgba(255,255,255,0.35);font-weight:400">— Télécom Normandie</em></span>
+            <span class="tl-period">Sept. 2025 – En cours · Rouen</span>
           </div>
-
-          <div style="margin-bottom: 25px; padding-left: 20px; border-left: 3px solid rgba(255,255,255,0.3);">
-            <strong style="font-size: 1.1rem;">Stagiaire</strong><br>
-            <span style="color: rgba(255,255,255,0.9);">Socacom – Stage</span><br>
-            <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Janv. 2025 – Févr. 2025 · 2 mois</span><br>
-            <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">Rouen, Normandie, France</span>
+          <div class="tl-item">
+            <span class="tl-role">Stagiaire</span>
+            <span class="tl-company">Socacom</span>
+            <span class="tl-period">Janv. 2025 – Févr. 2025 · 2 mois · Rouen</span>
           </div>
-
-          <div style="margin-bottom: 25px; padding-left: 20px; border-left: 3px solid rgba(255,255,255,0.3);">
-            <strong style="font-size: 1.1rem;">Stagiaire</strong><br>
-            <span style="color: rgba(255,255,255,0.9);">Socacom – Stage</span><br>
-            <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Sept. 2024 – Oct. 2024 · 2 mois</span><br>
-            <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">Rouen, Normandie, France</span>
+          <div class="tl-item">
+            <span class="tl-role">Stagiaire</span>
+            <span class="tl-company">Socacom</span>
+            <span class="tl-period">Sept. 2024 – Oct. 2024 · 2 mois · Rouen</span>
           </div>
-
-          <div style="margin-bottom: 25px; padding-left: 20px; border-left: 3px solid rgba(255,255,255,0.3);">
-            <strong style="font-size: 1.1rem;">Stagiaire</strong><br>
-            <span style="color: rgba(255,255,255,0.9);">AJ PHONE – Services de téléphonie d'entreprise</span><br>
-            <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Juin 2024 – Juil. 2024 · 2 mois</span><br>
-            <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">Rouen, Normandie, France</span>
+          <div class="tl-item">
+            <span class="tl-role">Stagiaire</span>
+            <span class="tl-company">AJ PHONE <em style="color:rgba(255,255,255,0.35);font-weight:400">— Téléphonie d'entreprise</em></span>
+            <span class="tl-period">Juin 2024 – Juil. 2024 · 2 mois · Rouen</span>
           </div>
-
-          <div style="padding-left: 20px; border-left: 3px solid rgba(255,255,255,0.3);">
-            <strong style="font-size: 1.1rem;">Stagiaire</strong><br>
-            <span style="color: rgba(255,255,255,0.9);">Socacom – Stage</span><br>
-            <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Nov. 2023 – Déc. 2023 · 2 mois</span>
+          <div class="tl-item">
+            <span class="tl-role">Stagiaire</span>
+            <span class="tl-company">Socacom</span>
+            <span class="tl-period">Nov. 2023 – Déc. 2023 · 2 mois</span>
           </div>
         </div>
-
       </div>
     </div>
   </section>
@@ -584,6 +664,7 @@ $update_label = file_exists(VEILLE_CACHE)
   <section id="competences-1" class="delayed-entry">
     <div class="glass-bubble-container">
       <div style="text-align: center;">
+        <span class="section-label">Stack & outils</span>
         <h2 class="title-dev">Compétences Développement</h2>
       </div>
       <div class="custom-grid">
@@ -606,6 +687,22 @@ $update_label = file_exists(VEILLE_CACHE)
         <div class="grid-item" data-tooltip="Développement backend et base de données">
           <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" alt="PHP" class="tool-logo" />
           <span>PHP</span>
+        </div>
+        <div class="grid-item" data-tooltip="Interfaces modernes et réactives">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" alt="React" class="tool-logo" />
+          <span>React</span>
+        </div>
+        <div class="grid-item" data-tooltip="Build tool ultra-rapide">
+          <img src="https://cdn.simpleicons.org/vite/646CFF" alt="Vite" class="tool-logo" />
+          <span>Vite</span>
+        </div>
+        <div class="grid-item" data-tooltip="Framework CSS utility-first">
+          <img src="https://cdn.simpleicons.org/tailwindcss/06B6D4" alt="Tailwind" class="tool-logo" />
+          <span>Tailwind CSS</span>
+        </div>
+        <div class="grid-item" data-tooltip="Base de données relationnelle">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg" alt="MySQL" class="tool-logo" />
+          <span>MySQL</span>
         </div>
       </div>
       <div class="divider"></div>
@@ -630,16 +727,59 @@ $update_label = file_exists(VEILLE_CACHE)
           <span>Eclipse</span>
         </div>
         <div class="grid-item" data-tooltip="Versioning & collaboration">
-          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/github/github-original.svg" alt="GitHub" class="tool-logo" />
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/github/github-original.svg" alt="GitHub" class="tool-logo" style="filter:invert(1);" />
           <span>GitHub</span>
         </div>
         <div class="grid-item" data-tooltip="Assistant IA de développement en terminal">
-          <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/anthropic.svg" alt="Claude Code" class="tool-logo" style="filter: invert(1);" />
+          <img src="https://cdn.simpleicons.org/anthropic/ffffff" alt="Claude Code" class="tool-logo" />
           <span>Claude Code</span>
         </div>
         <div class="grid-item" data-tooltip="IDE nouvelle génération by Google">
           <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/google/google-original.svg" alt="Antigravity" class="tool-logo" />
           <span>Antigravity</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div style="text-align: center;">
+        <h2 class="title-tools" style="font-size:1.6rem;margin-bottom:1.5rem;">DevOps &amp; Infrastructure</h2>
+      </div>
+      <div class="custom-grid">
+        <div class="grid-item" data-tooltip="Conteneurisation d'applications">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg" alt="Docker" class="tool-logo" />
+          <span>Docker</span>
+        </div>
+        <div class="grid-item" data-tooltip="Automatisation de configuration serveurs">
+          <img src="https://cdn.simpleicons.org/ansible/EE0000" alt="Ansible" class="tool-logo" />
+          <span>Ansible</span>
+        </div>
+        <div class="grid-item" data-tooltip="Administration systèmes Linux">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/linux/linux-original.svg" alt="Linux" class="tool-logo" />
+          <span>Linux</span>
+        </div>
+        <div class="grid-item" data-tooltip="Hyperviseur open source, alternative VMware">
+          <img src="https://cdn.simpleicons.org/proxmox/E57000" alt="Proxmox" class="tool-logo" />
+          <span>Proxmox</span>
+        </div>
+        <div class="grid-item" data-tooltip="VPS & Cloud Server Hetzner">
+          <img src="https://cdn.simpleicons.org/hetzner/D50C2D" alt="Hetzner" class="tool-logo" />
+          <span>Hetzner</span>
+        </div>
+        <div class="grid-item" data-tooltip="Analyse réseau & capture de paquets">
+          <img src="https://cdn.simpleicons.org/wireshark/1679A7" alt="Wireshark" class="tool-logo" />
+          <span>Wireshark</span>
+        </div>
+        <div class="grid-item" data-tooltip="Configuration réseau Cisco, VLANs, routage">
+          <img src="https://cdn.simpleicons.org/cisco/1BA0D7" alt="Cisco" class="tool-logo" />
+          <span>Cisco</span>
+        </div>
+        <div class="grid-item" data-tooltip="Automatisation de workflows & intégrations">
+          <img src="https://cdn.simpleicons.org/n8n/EA4B71" alt="n8n" class="tool-logo" />
+          <span>n8n</span>
+        </div>
+        <div class="grid-item" data-tooltip="GMAO — Gestion maintenance et équipements">
+          <i class="fas fa-tools" style="font-size:3rem;color:#00d4ff;margin-bottom:15px;display:block;"></i>
+          <span>Bob! Desk</span>
         </div>
       </div>
     </div>
@@ -648,6 +788,7 @@ $update_label = file_exists(VEILLE_CACHE)
   <!-- PROJETS -->
   <section id="projets" class="delayed-entry section-projets-fullwidth">
     <div class="projets-header">
+      <span class="section-label">Réalisations</span>
       <h2>Mes Projets</h2>
       <p>Cliquez sur un projet pour voir les détails.</p>
     </div>
@@ -732,12 +873,46 @@ $update_label = file_exists(VEILLE_CACHE)
             <div class="bubble-glow" style="background: rgba(255, 71, 87, 0.4);"></div>
           </div>
 
+          <div class="bubble-project" onclick="openModal('modal-serveur')">
+            <div class="bubble-content">
+              <i class="fas fa-server project-icon-main"></i>
+              <h4 class="project-title">Serveur Production</h4>
+              <span class="project-tech">Shell / Nginx / Hetzner</span>
+            </div>
+            <div class="bubble-glow" style="background: rgba(239, 68, 68, 0.4);"></div>
+          </div>
+
+          <div class="bubble-project" onclick="openModal('modal-teledesk')">
+            <div class="bubble-content">
+              <i class="fas fa-plug project-icon-main"></i>
+              <h4 class="project-title">TeleDesk</h4>
+              <span class="project-tech">Python / GMAO / GUI</span>
+            </div>
+            <div class="bubble-glow" style="background: rgba(59, 130, 246, 0.4);"></div>
+          </div>
+
+          <div class="bubble-project" onclick="openModal('modal-bigfive')">
+            <div class="bubble-content">
+              <i class="fas fa-paint-brush project-icon-main"></i>
+              <h4 class="project-title">Big Five Refonte</h4>
+              <span class="project-tech">JavaScript / HTML/CSS</span>
+            </div>
+            <div class="bubble-glow" style="background: rgba(168, 85, 247, 0.4);"></div>
+          </div>
+
         </div>
       </div>
 
       <button class="carousel-arrow carousel-next" onclick="carouselMove(1)" aria-label="Projet suivant">
         <i class="fas fa-chevron-right"></i>
       </button>
+    </div>
+
+    <div class="carousel-drag-hint" id="carousel-hint">
+      <div class="drag-track">
+        <div class="drag-cursor"></div>
+      </div>
+      <span class="drag-label">glisser pour explorer</span>
     </div>
 
     <div class="carousel-dots">
@@ -749,6 +924,9 @@ $update_label = file_exists(VEILLE_CACHE)
       <span class="carousel-dot" onclick="carouselGoTo(5)"></span>
       <span class="carousel-dot" onclick="carouselGoTo(6)"></span>
       <span class="carousel-dot" onclick="carouselGoTo(7)"></span>
+      <span class="carousel-dot" onclick="carouselGoTo(8)"></span>
+      <span class="carousel-dot" onclick="carouselGoTo(9)"></span>
+      <span class="carousel-dot" onclick="carouselGoTo(10)"></span>
     </div>
       
   </section>
@@ -757,60 +935,100 @@ $update_label = file_exists(VEILLE_CACHE)
   <section id="competences" class="delayed-entry">
     <div class="container">
       <div class="content-box">
-        <h2>Compétences Techniques</h2>
-        <div class="skills-grid">
-          <div class="skill-card" data-tooltip="Cisco, Huawei, VLANs, routage inter-VLAN">
-            <h3>🌐 Réseaux &amp; Infra</h3>
-            <ul>
-              <li>Cisco et Huawei</li>
-              <li>Architecture &amp; VLANs</li>
-              <li>Solutions opérateurs</li>
-            </ul>
+        <span class="section-label" style="text-align:center;display:block;">Infra & Systèmes</span>
+        <h2 style="text-align:center;">Compétences Techniques</h2>
+        <div class="tech-grid-modern">
+
+          <div class="tech-cat">
+            <div class="tech-cat-header">
+              <i class="fas fa-network-wired"></i>
+              <span>Réseaux & Infrastructure</span>
+            </div>
+            <div class="tech-pills">
+              <span class="tech-pill">Cisco IOS</span>
+              <span class="tech-pill">Huawei</span>
+              <span class="tech-pill">VLANs</span>
+              <span class="tech-pill">Routage inter-VLAN</span>
+              <span class="tech-pill">ACL</span>
+              <span class="tech-pill">STP / OSPF</span>
+              <span class="tech-pill">Solutions opérateurs</span>
+              <span class="tech-pill">Câblage RJ45</span>
+            </div>
           </div>
-          <div class="skill-card" data-tooltip="VoIP SIP, Alcatel OXO, Centrex cloud">
-            <h3>📞 Téléphonie</h3>
-            <ul>
-              <li>Alcatel (OXO, IP)</li>
-              <li>VoIP / ToIP / SIP</li>
-              <li>Centrex et UnyCX</li>
-            </ul>
+
+          <div class="tech-cat">
+            <div class="tech-cat-header">
+              <i class="fas fa-phone-alt"></i>
+              <span>Téléphonie IP</span>
+            </div>
+            <div class="tech-pills">
+              <span class="tech-pill">Alcatel OXO</span>
+              <span class="tech-pill">VoIP / SIP</span>
+              <span class="tech-pill">ToIP</span>
+              <span class="tech-pill">Centrex</span>
+              <span class="tech-pill">UnyCX</span>
+              <span class="tech-pill">Trunk SIP</span>
+              <span class="tech-pill">Postes IP</span>
+            </div>
           </div>
-          <div class="skill-card" data-tooltip="VMware, Proxmox, Hyper-V, VirtualBox">
-            <h3>☁️ Virtualisation</h3>
-            <ul>
-              <li>VMware, VirtualBox</li>
-              <li>Hyper-V &amp; Proxmox</li>
-              <li>Déploiement de VMs</li>
-            </ul>
+
+          <div class="tech-cat">
+            <div class="tech-cat-header">
+              <i class="fas fa-server"></i>
+              <span>Virtualisation</span>
+            </div>
+            <div class="tech-pills">
+              <span class="tech-pill">Proxmox VE</span>
+              <span class="tech-pill">VMware ESXi</span>
+              <span class="tech-pill">Hyper-V</span>
+              <span class="tech-pill">VirtualBox</span>
+              <span class="tech-pill">LXC / Docker</span>
+              <span class="tech-pill">Snapshots</span>
+              <span class="tech-pill">Haute disponibilité</span>
+            </div>
           </div>
-          <div class="skill-card" data-tooltip="Windows Server, Linux Debian, supervision">
-            <h3>🖥️ Systèmes</h3>
-            <ul>
-              <li>Windows Server</li>
-              <li>Linux (Debian/Mint)</li>
-              <li>Supervision</li>
-            </ul>
+
+          <div class="tech-cat">
+            <div class="tech-cat-header">
+              <i class="fas fa-desktop"></i>
+              <span>Systèmes</span>
+            </div>
+            <div class="tech-pills">
+              <span class="tech-pill">Windows Server</span>
+              <span class="tech-pill">Linux Debian</span>
+              <span class="tech-pill">Ubuntu</span>
+              <span class="tech-pill">Active Directory</span>
+              <span class="tech-pill">GPO</span>
+              <span class="tech-pill">Supervision</span>
+              <span class="tech-pill">Bash scripting</span>
+            </div>
           </div>
+
         </div>
       </div>
     </div>
   </section>
 
   <!-- VEILLE TECHNOLOGIQUE -->
-  <section id="veille" class="delayed-entry">
+  <section id="veille" class="delayed-entry section-wide">
     <div class="container">
       <div class="content-box">
-        <h2>Veille Technologique</h2>
-        <p style="color: rgba(255,255,255,0.55); margin-bottom: 0.5rem; font-size: 0.95rem; margin-top: -1rem;">
+        <span class="section-label" style="text-align:center;display:block;">Domaines surveillés</span>
+        <h2 style="text-align:center;">Veille Technologique</h2>
+        <p style="color: rgba(255,255,255,0.55); margin-bottom: 0.5rem; font-size: 0.95rem; margin-top: -1rem; text-align:center;">
           Domaines surveillés activement dans le cadre de ma formation BTS SIO SISR.
         </p>
-        <p style="color: rgba(0,212,255,0.5); font-size: 0.72rem; margin-bottom: 2rem; letter-spacing: 0.5px;">
-          <?php if ($veille_live): ?>
-            <i class="fas fa-circle" style="color:#22c55e;font-size:0.55rem;vertical-align:middle;"></i> Flux RSS live · Mis à jour le <?= $update_label ?> · Refresh automatique toutes les semaines
-          <?php else: ?>
-            <i class="fas fa-circle" style="color:#f97316;font-size:0.55rem;vertical-align:middle;"></i> Contenu de référence · Actualisation au prochain accès réseau
-          <?php endif; ?>
-        </p>
+        <div style="text-align:center; margin-bottom:2rem;">
+          <span class="veille-status-pill">
+            <?php if ($veille_live): ?>
+              <i class="fas fa-circle" style="color:#22c55e;font-size:0.5rem;vertical-align:middle;"></i>
+              Flux RSS live &nbsp;·&nbsp; Mis à jour le <?= $update_label ?> &nbsp;·&nbsp; Refresh toutes les semaines
+            <?php else: ?>
+              <i class="fas fa-circle" style="color:#f97316;font-size:0.5rem;vertical-align:middle;"></i>
+              Contenu de référence &nbsp;·&nbsp; Actualisation au prochain accès réseau
+            <?php endif; ?>
+          </span>
+        </div>
         <div class="veille-grid">
           <?php foreach ($veille_now as $i => $a): ?>
           <div class="veille-card" style="--accent: <?= $a['accent'] ?>; cursor:pointer;" onclick="openVeilleModal(<?= $i ?>)">
@@ -875,83 +1093,164 @@ $update_label = file_exists(VEILLE_CACHE)
   <section id="apprentissage" class="delayed-entry">
     <div class="container">
       <div class="content-box">
-        <h2>En cours d'apprentissage</h2>
-        <p style="color: rgba(255,255,255,0.5); margin-bottom: 2.5rem; font-size: 0.9rem; margin-top: -0.8rem;">
-          Technologies que j'explore et développe activement en ce moment.
+        <span class="section-label" style="text-align:center;display:block;">En progression</span>
+        <h2 style="text-align:center;">En cours d&apos;apprentissage</h2>
+        <p style="text-align:center;color:rgba(255,255,255,0.45);margin-bottom:2.5rem;font-size:0.9rem;margin-top:-0.5rem;">
+          Technologies que j&apos;explore et d&eacute;veloppe activement en ce moment.
         </p>
-        <div class="learning-grid">
 
-          <div class="learning-item">
-            <div class="learning-header">
-              <span class="learning-icon"><i class="fab fa-python"></i></span>
-              <span class="learning-name">Python</span>
-              <span class="learning-percent">90%</span>
+        <div class="skill-rings">
+
+          <div class="ring-item">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 36 36" class="ring-svg">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill" data-pct="90" stroke="#ffd43b" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="ring-center">
+                <i class="fab fa-python ring-icon" style="color:#ffd43b;"></i>
+                <span class="ring-pct">90%</span>
+              </div>
             </div>
-            <div class="learning-bar-track">
-              <div class="learning-bar-fill" data-width="90" style="background: linear-gradient(90deg, #3776ab, #ffd43b);"></div>
-            </div>
-            <p class="learning-desc">Scripts d'automatisation, manipulation de fichiers, initiation à la data</p>
+            <p class="ring-name">Python</p>
+            <span class="ring-badge expert">Expert</span>
           </div>
 
-          <div class="learning-item">
-            <div class="learning-header">
-              <span class="learning-icon"><i class="fab fa-docker"></i></span>
-              <span class="learning-name">Docker</span>
-              <span class="learning-percent">40%</span>
+          <div class="ring-item">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 36 36" class="ring-svg">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill" data-pct="60" stroke="#0db7ed" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="ring-center">
+                <i class="fab fa-docker ring-icon" style="color:#0db7ed;"></i>
+                <span class="ring-pct">60%</span>
+              </div>
             </div>
-            <div class="learning-bar-track">
-              <div class="learning-bar-fill" data-width="40" style="background: linear-gradient(90deg, #0db7ed, #384d54);"></div>
-            </div>
-            <p class="learning-desc">Conteneurisation d'applications, docker-compose, déploiement de services</p>
+            <p class="ring-name">Docker</p>
+            <span class="ring-badge inter">Interm&eacute;diaire</span>
           </div>
 
-          <div class="learning-item">
-            <div class="learning-header">
-              <span class="learning-icon"><i class="fab fa-php"></i></span>
-              <span class="learning-name">PHP / SQL</span>
-              <span class="learning-percent">90%</span>
+          <div class="ring-item">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 36 36" class="ring-svg">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill" data-pct="90" stroke="#777bb4" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="ring-center">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" class="ring-icon-img" alt="PHP">
+                <span class="ring-pct">90%</span>
+              </div>
             </div>
-            <div class="learning-bar-track">
-              <div class="learning-bar-fill" data-width="90" style="background: linear-gradient(90deg, #777bb4, #4f5b93);"></div>
-            </div>
-            <p class="learning-desc">Développement backend, PDO, authentification, CRUD complet</p>
+            <p class="ring-name">PHP / SQL</p>
+            <span class="ring-badge expert">Expert</span>
           </div>
 
-          <div class="learning-item">
-            <div class="learning-header">
-              <span class="learning-icon"><i class="fas fa-shield-alt"></i></span>
-              <span class="learning-name">Cybersécurité</span>
-              <span class="learning-percent">35%</span>
+          <div class="ring-item">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 36 36" class="ring-svg">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill" data-pct="45" stroke="#ff4757" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="ring-center">
+                <i class="fas fa-shield-alt ring-icon" style="color:#ff4757;"></i>
+                <span class="ring-pct">45%</span>
+              </div>
             </div>
-            <div class="learning-bar-track">
-              <div class="learning-bar-fill" data-width="35" style="background: linear-gradient(90deg, #ff4757, #c0392b);"></div>
-            </div>
-            <p class="learning-desc">Bases de la sécurité réseau, pare-feu, veille ANSSI, CTF débutant</p>
+            <p class="ring-name">Cybers&eacute;curit&eacute;</p>
+            <span class="ring-badge debutant">D&eacute;butant</span>
           </div>
 
-          <div class="learning-item">
-            <div class="learning-header">
-              <span class="learning-icon"><i class="fas fa-cloud"></i></span>
-              <span class="learning-name">Azure / Cloud</span>
-              <span class="learning-percent">25%</span>
+          <div class="ring-item">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 36 36" class="ring-svg">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill" data-pct="25" stroke="#0078d4" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="ring-center">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/azure/azure-original.svg" class="ring-icon-img" alt="Azure">
+                <span class="ring-pct">25%</span>
+              </div>
             </div>
-            <div class="learning-bar-track">
-              <div class="learning-bar-fill" data-width="25" style="background: linear-gradient(90deg, #0078d4, #005a9e);"></div>
-            </div>
-            <p class="learning-desc">Initiation aux services cloud Microsoft, VMs Azure, notions AD DS</p>
+            <p class="ring-name">Azure / Cloud</p>
+            <span class="ring-badge debutant">D&eacute;butant</span>
           </div>
 
-          <div class="learning-item">
-            <div class="learning-header">
-              <span class="learning-icon"><i class="fab fa-react"></i></span>
-              <span class="learning-name">React</span>
-              <span class="learning-percent">80%</span>
+          <div class="ring-item">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 36 36" class="ring-svg">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill" data-pct="80" stroke="#61dafb" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="ring-center">
+                <i class="fab fa-react ring-icon" style="color:#61dafb;"></i>
+                <span class="ring-pct">80%</span>
+              </div>
             </div>
-            <div class="learning-bar-track">
-              <div class="learning-bar-fill" data-width="80" style="background: linear-gradient(90deg, #0078d4, #005a9e);"></div>
-            </div>
-            <p class="learning-desc">Création d'interfaces utilisateur fluides et interactives</p>
+            <p class="ring-name">React</p>
+            <span class="ring-badge avance">Avanc&eacute;</span>
           </div>
+
+          <div class="ring-item">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 36 36" class="ring-svg">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill" data-pct="90" stroke="#D50C2D" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="ring-center">
+                <img src="https://cdn.simpleicons.org/hetzner/D50C2D" class="ring-icon-img" alt="Hetzner">
+                <span class="ring-pct">90%</span>
+              </div>
+            </div>
+            <p class="ring-name">Hetzner</p>
+            <span class="ring-badge expert">Expert</span>
+          </div>
+
+          <div class="ring-item">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 36 36" class="ring-svg">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill" data-pct="65" stroke="#e63946" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="ring-center">
+                <i class="fas fa-phone ring-icon" style="color:#e63946;"></i>
+                <span class="ring-pct">65%</span>
+              </div>
+            </div>
+            <p class="ring-name">Alcatel OXO</p>
+            <span class="ring-badge inter">Interm&eacute;diaire</span>
+          </div>
+
+          <div class="ring-item">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 36 36" class="ring-svg">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill" data-pct="70" stroke="#4361ee" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="ring-center">
+                <i class="fas fa-headset ring-icon" style="color:#4361ee;"></i>
+                <span class="ring-pct">70%</span>
+              </div>
+            </div>
+            <p class="ring-name">Centrex UnyCX</p>
+            <span class="ring-badge inter">Interm&eacute;diaire</span>
+          </div>
+
+          <div class="ring-item">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 36 36" class="ring-svg">
+                <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="ring-fill" data-pct="50" stroke="#1BA0D7" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="ring-center">
+                <img src="https://cdn.simpleicons.org/cisco/1BA0D7" class="ring-icon-img" alt="Cisco">
+                <span class="ring-pct">50%</span>
+              </div>
+            </div>
+            <p class="ring-name">Cisco</p>
+            <span class="ring-badge inter">Interm&eacute;diaire</span>
+          </div>
+
         </div>
       </div>
     </div>
@@ -961,64 +1260,85 @@ $update_label = file_exists(VEILLE_CACHE)
   <section id="contact" class="delayed-entry">
     <div class="container">
       <div class="content-box">
-        <h2>Me Contacter</h2>
-        <p style="color: rgba(255,255,255,0.5); margin-bottom: 2rem; font-size: 0.9rem; margin-top: -0.8rem;">
+        <span class="section-label" style="text-align:center;display:block;">Restons en contact</span>
+        <h2 style="text-align:center;">Me Contacter</h2>
+        <p style="text-align:center;color:rgba(255,255,255,0.45);margin-bottom:2.5rem;font-size:0.9rem;margin-top:-0.5rem;">
           Une question, une opportunité de stage ou juste un bonjour ?
         </p>
 
-        <?php if ($contact_status === 'success' || $contact_status === 'success_dev'): ?>
-          <div class="contact-alert contact-alert--success">
-            <i class="fas fa-check-circle"></i>
-            Message envoyé ! Je vous répondrai dès que possible.
-            <?php if ($contact_status === 'success_dev'): ?>
-              <span style="opacity:0.5; font-size:0.78rem; display:block; margin-top:4px;">(Mode local XAMPP — configurer php.ini pour l'envoi réel)</span>
+        <div class="contact-layout">
+
+          <!-- Colonne gauche : infos -->
+          <div class="contact-info">
+            <p class="contact-info-text">
+              Je suis disponible pour des opportunités d'alternance, de stage, ou simplement pour échanger sur un projet.
+            </p>
+
+            <div class="contact-info-links">
+              <a href="mailto:adam.bellanger.pro@gmail.com" class="cil-row">
+                <i class="fas fa-envelope"></i>
+                <span>adam.bellanger.pro@gmail.com</span>
+                <i class="fas fa-arrow-right cil-arrow"></i>
+              </a>
+              <a href="https://www.linkedin.com/in/adam-bellanger-652919386/" target="_blank" rel="noreferrer" class="cil-row">
+                <i class="fab fa-linkedin"></i>
+                <span>Adam Bellanger · LinkedIn</span>
+                <i class="fas fa-arrow-right cil-arrow"></i>
+              </a>
+              <a href="https://github.com/AdamBellanger" target="_blank" rel="noreferrer" class="cil-row">
+                <i class="fab fa-github"></i>
+                <span>AdamBellanger · GitHub</span>
+                <i class="fas fa-arrow-right cil-arrow"></i>
+              </a>
+              <a href="cv/Adam%20BELLANGER.pdf" download="CV_Adam_Bellanger.pdf" class="cil-row">
+                <i class="fas fa-file-pdf"></i>
+                <span>Télécharger mon CV PDF</span>
+                <i class="fas fa-arrow-right cil-arrow"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- Colonne droite : formulaire -->
+          <div class="contact-form-card">
+            <?php if ($contact_status === 'success' || $contact_status === 'success_dev'): ?>
+              <div class="contact-alert contact-alert--success" style="margin-bottom:1.25rem;">
+                <i class="fas fa-check-circle"></i> Message envoyé ! Je vous répondrai dès que possible.
+              </div>
+            <?php elseif ($contact_status === 'error'): ?>
+              <div class="contact-alert contact-alert--error" style="margin-bottom:1.25rem;">
+                <i class="fas fa-exclamation-triangle"></i> Veuillez remplir tous les champs correctement.
+              </div>
             <?php endif; ?>
-          </div>
-        <?php elseif ($contact_status === 'error'): ?>
-          <div class="contact-alert contact-alert--error">
-            <i class="fas fa-exclamation-triangle"></i>
-            Veuillez remplir tous les champs correctement.
-          </div>
-        <?php endif; ?>
 
-        <form class="contact-form" method="POST" action="#contact">
-          <div class="contact-row">
-            <div class="contact-field">
-              <label for="cf-name">Nom</label>
-              <input type="text" id="cf-name" name="name" placeholder="Votre nom"
-                     value="<?= htmlspecialchars($contact_values['name']) ?>" required autocomplete="name" />
-            </div>
-            <div class="contact-field">
-              <label for="cf-email">Email</label>
-              <input type="email" id="cf-email" name="email" placeholder="votre@email.com"
-                     value="<?= htmlspecialchars($contact_values['email']) ?>" required autocomplete="email" />
-            </div>
+            <form class="contact-form" method="POST" action="#contact">
+              <div class="contact-row">
+                <div class="contact-field">
+                  <label for="cf-name">Nom</label>
+                  <input type="text" id="cf-name" name="name" placeholder="Votre nom"
+                         value="<?= htmlspecialchars($contact_values['name']) ?>" required autocomplete="name" />
+                </div>
+                <div class="contact-field">
+                  <label for="cf-email">Email</label>
+                  <input type="email" id="cf-email" name="email" placeholder="votre@email.com"
+                         value="<?= htmlspecialchars($contact_values['email']) ?>" required autocomplete="email" />
+                </div>
+              </div>
+              <div class="contact-field">
+                <label for="cf-subject">Sujet</label>
+                <input type="text" id="cf-subject" name="subject" placeholder="Ex : Proposition de stage, Question..."
+                       value="<?= htmlspecialchars($contact_values['subject']) ?>" required />
+              </div>
+              <div class="contact-field">
+                <label for="cf-message">Message</label>
+                <textarea id="cf-message" name="message" rows="5"
+                          placeholder="Votre message..."><?= htmlspecialchars($contact_values['message']) ?></textarea>
+              </div>
+              <button type="submit" name="contact_submit" class="btn-modal contact-submit">
+                <i class="fas fa-paper-plane"></i> Envoyer le message
+              </button>
+            </form>
           </div>
-          <div class="contact-field">
-            <label for="cf-subject">Sujet</label>
-            <input type="text" id="cf-subject" name="subject" placeholder="Ex : Proposition de stage, Question..."
-                   value="<?= htmlspecialchars($contact_values['subject']) ?>" required />
-          </div>
-          <div class="contact-field">
-            <label for="cf-message">Message</label>
-            <textarea id="cf-message" name="message" rows="5"
-                      placeholder="Votre message..."><?= htmlspecialchars($contact_values['message']) ?></textarea>
-          </div>
-          <button type="submit" name="contact_submit" class="btn-modal contact-submit">
-            <i class="fas fa-paper-plane"></i> Envoyer le message
-          </button>
-        </form>
 
-        <div class="contact-links">
-          <a href="https://www.linkedin.com/in/adam-bellanger-652919386/" target="_blank" rel="noreferrer" class="contact-link" data-tooltip="Mon profil LinkedIn">
-            <i class="fab fa-linkedin"></i> LinkedIn
-          </a>
-          <a href="https://github.com/compteproadambellanger-gif" target="_blank" rel="noreferrer" class="contact-link" data-tooltip="Mes repos GitHub">
-            <i class="fab fa-github"></i> GitHub
-          </a>
-          <a href="cv/Adam%20BELLANGER.pdf" download="CV_Adam_Bellanger.pdf" class="contact-link" data-tooltip="Télécharger mon CV PDF">
-            <i class="fas fa-file-pdf"></i> CV PDF
-          </a>
         </div>
       </div>
     </div>
@@ -1040,6 +1360,95 @@ $update_label = file_exists(VEILLE_CACHE)
   </script>
   <script type="module" src="js/threescene.js"></script>
   <script src="js/ui.js"></script>
+  <script>
+  // Animation rings SVG au scroll
+  (function() {
+    var rings = document.querySelectorAll('.ring-fill');
+    if (!rings.length) return;
+    var obs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if (!e.isIntersecting) return;
+        e.target.style.strokeDasharray = e.target.dataset.pct + ', 100';
+        obs.unobserve(e.target);
+      });
+    }, { threshold: 0.3 });
+    rings.forEach(function(r) { obs.observe(r); });
+  })();
+
+  // Cache le hint carousel après la première interaction
+  (function() {
+    const hint = document.getElementById('carousel-hint');
+    if (!hint) return;
+    function hide() {
+      hint.style.opacity = '0';
+      hint.style.pointerEvents = 'none';
+      /* on garde la hauteur pour pas faire sauter le layout */
+    }
+    document.querySelectorAll('.carousel-arrow, .carousel-dot').forEach(el => {
+      el.addEventListener('click', hide, { once: true });
+    });
+    document.querySelector('.carousel-track')?.addEventListener('mousedown', hide, { once: true });
+  })();
+
+  (function() {
+    function initSwitch() {
+      const sw   = document.getElementById('tl-switch');
+      if (!sw) return;
+      const bg   = sw.querySelector('.tl-switch-bg');
+      const opts = Array.from(sw.querySelectorAll('.tl-switch-opt'));
+      let current = 0;
+
+      function moveBg(idx) {
+        const btn = opts[idx];
+        bg.style.width  = btn.offsetWidth  + 'px';
+        bg.style.left   = btn.offsetLeft   + 'px';
+        bg.style.height = btn.offsetHeight + 'px';
+        bg.style.top    = btn.offsetTop    + 'px';
+      }
+
+      function setTab(idx) {
+        if (idx === current) return;
+        current = idx;
+        opts.forEach((o, i) => o.classList.toggle('active', i === idx));
+        moveBg(idx);
+        document.getElementById('tl-formation').style.display  = idx === 0 ? 'block' : 'none';
+        document.getElementById('tl-experience').style.display = idx === 1 ? 'block' : 'none';
+      }
+
+      // Init bg position
+      setTimeout(() => moveBg(0), 60);
+      window.addEventListener('resize', () => moveBg(current));
+
+      // Clic
+      opts.forEach((opt, i) => opt.addEventListener('click', () => setTab(i)));
+
+      // Drag souris gauche↔droite
+      let dragX = 0, dragging = false;
+      sw.addEventListener('mousedown', e => { dragX = e.clientX; dragging = true; e.preventDefault(); });
+      document.addEventListener('mouseup', e => {
+        if (!dragging) return;
+        dragging = false;
+        const diff = e.clientX - dragX;
+        if (diff >  55) setTab(1);
+        if (diff < -55) setTab(0);
+      });
+
+      // Swipe tactile
+      sw.addEventListener('touchstart', e => { dragX = e.touches[0].clientX; }, { passive: true });
+      sw.addEventListener('touchend',   e => {
+        const diff = e.changedTouches[0].clientX - dragX;
+        if (diff >  55) setTab(1);
+        if (diff < -55) setTab(0);
+      }, { passive: true });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSwitch);
+    } else {
+      initSwitch();
+    }
+  })();
+  </script>
 
   <!-- SCROLL-TO-TOP -->
   <button id="scroll-top-btn" title="Retour en haut">

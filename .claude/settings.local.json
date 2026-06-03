@@ -4,7 +4,13 @@
       "WebFetch(domain:cdn.simpleicons.org)",
       "WebFetch(domain:simpleicons.org)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\portfolio-react-clean\" -Force | Select-Object Name, @{Name=\"Type\";Expression={if\\($_.PSIsContainer\\){\"Dir\"}else{\"File\"}}} | Format-Table -AutoSize)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(*)",
+      "PowerShell(*)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }

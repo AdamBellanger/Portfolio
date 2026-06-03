@@ -4,8 +4,12 @@ if ('scrollRestoration' in history) {
 }
 window.scrollTo(0, 0);
 
+// Flag drag carousel — empêche l'ouverture de modal après un drag
+window._carouselDragged = false;
+
 // Ouvre une modale projet
 function openModal(id) {
+  if (window._carouselDragged) return;
   const modal = document.getElementById(id);
   if (modal) {
     modal.classList.add('active');
@@ -171,6 +175,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  // 6a) Fade Three.js blob au scroll — disparaît après la section hero
+  const threeContainer = document.querySelector('.three-container');
+  function updateBlobOpacity() {
+    if (!threeContainer) return;
+    const heroH = window.innerHeight;
+    const fade = Math.min(window.scrollY / (heroH * 0.6), 1);
+    threeContainer.style.opacity = (1 - fade * 0.80).toFixed(3);
+  }
+  window.addEventListener('scroll', updateBlobOpacity, { passive: true });
+  updateBlobOpacity();
+
   // 6) Scroll progress bar + scroll-to-top
   const progressBar = document.getElementById('scroll-progress');
   const scrollTopBtn = document.getElementById('scroll-top-btn');
@@ -213,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const slides = track ? Array.from(track.children) : [];
     if (!slides.length) return;
 
-    let currentIndex = 0;
+    let currentIndex = 8; // Serveur Production au centre au démarrage
     const total = slides.length;
 
     function updateCarousel() {
@@ -266,7 +281,11 @@ document.addEventListener('DOMContentLoaded', function () {
       dragging = false;
       track.style.cursor = 'grab';
       var diff = dragStartX - e.clientX;
-      if (Math.abs(diff) > 50) carouselMove(diff > 0 ? 1 : -1);
+      if (Math.abs(diff) > 50) {
+        carouselMove(diff > 0 ? 1 : -1);
+        window._carouselDragged = true;
+        setTimeout(function() { window._carouselDragged = false; }, 300);
+      }
     });
   })();
 
