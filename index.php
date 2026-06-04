@@ -513,7 +513,10 @@ $update_label = file_exists(VEILLE_CACHE)
   </div>
 
   <!-- NAVIGATION -->
-  <nav class="github-pill delayed-entry">
+  <button class="nav-burger" id="nav-burger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <nav class="github-pill delayed-entry" id="main-nav">
     <div class="nav-marker"></div>
     <a href="#accueil" class="nav-link active">Accueil</a>
     <a href="#apropos" class="nav-link">Qui suis-je</a>
@@ -531,7 +534,7 @@ $update_label = file_exists(VEILLE_CACHE)
       <a href="https://www.linkedin.com/in/adam-bellanger-652919386/" target="_blank" rel="noreferrer" title="LinkedIn">
         <i class="fab fa-linkedin"></i>
       </a>
-      <a href="https://github.com/compteproadambellanger-gif" target="_blank" rel="noreferrer" title="GitHub">
+      <a href="https://github.com/AdamBellanger" target="_blank" rel="noreferrer" title="GitHub">
         <i class="fab fa-github"></i>
       </a>
     </div>
@@ -1361,6 +1364,24 @@ $update_label = file_exists(VEILLE_CACHE)
   <script type="module" src="js/threescene.js"></script>
   <script src="js/ui.js"></script>
   <script>
+  // Menu burger mobile
+  (function() {
+    var burger = document.getElementById('nav-burger');
+    var nav    = document.getElementById('main-nav');
+    if (!burger || !nav) return;
+    burger.addEventListener('click', function() {
+      nav.classList.toggle('nav-open');
+      burger.classList.toggle('active');
+    });
+    // Ferme le menu au clic sur un lien
+    nav.querySelectorAll('.nav-link').forEach(function(link) {
+      link.addEventListener('click', function() {
+        nav.classList.remove('nav-open');
+        burger.classList.remove('active');
+      });
+    });
+  })();
+
   // Animation rings SVG au scroll
   (function() {
     var rings = document.querySelectorAll('.ring-fill');
