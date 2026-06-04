@@ -208,16 +208,16 @@ section {
 }
 .hero h1 {
   font-family: 'Montserrat', sans-serif;
-  font-size: 8rem;
+  font-size: 6rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 5px;
+  letter-spacing: 4px;
   margin-bottom: 0.5rem;
   color: #ffffff;
   text-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
 }
 .hero h3 {
-  font-size: 4rem;
+  font-size: 3rem;
   color: #ffffff;
   margin-bottom: 2rem;
   margin-top: 0;
@@ -1618,8 +1618,8 @@ nav.github-pill a.nav-link.active {
   .skills-grid   { grid-template-columns: repeat(2, 1fr); }
 
   /* Hero scaling dès la tablette */
-  .hero h1 { font-size: clamp(3rem, 11vw, 7rem); letter-spacing: 2px; white-space: normal; }
-  .hero h3 { font-size: clamp(2rem, 7vw, 3.5rem); white-space: normal; }
+  .hero h1 { font-size: clamp(2.6rem, 9vw, 5.5rem); letter-spacing: 2px; white-space: normal; }
+  .hero h3 { font-size: clamp(1.7rem, 6vw, 3rem); white-space: normal; }
 }
 
 /* ════════ NAV MOBILE / TABLETTE (≤ 1024px) ════════ */
@@ -1687,8 +1687,8 @@ nav.github-pill a.nav-link.active {
   .container { max-width: 100%; }
 
   /* Hero fluide */
-  .hero h1 { font-size: clamp(2.6rem, 11vw, 5rem); letter-spacing: 1px; white-space: normal; }
-  .hero h3 { font-size: clamp(1.6rem, 7vw, 3rem); white-space: normal; }
+  .hero h1 { font-size: clamp(2.2rem, 9vw, 4rem); letter-spacing: 1px; white-space: normal; }
+  .hero h3 { font-size: clamp(1.4rem, 6vw, 2.4rem); white-space: normal; }
   .hero-badge { padding: 10px 20px; font-size: 0.95rem; }
   .hero-location { font-size: 0.9rem; }
 
@@ -1735,7 +1735,7 @@ nav.github-pill a.nav-link.active {
 @media (max-width: 380px) {
   .skill-rings { grid-template-columns: repeat(2, 1fr); gap: 1.5rem 0.4rem; }
   .ring-wrap   { width: 115px; height: 115px; }
-  .hero h1 { font-size: clamp(2.4rem, 14vw, 3.2rem); }
+  .hero h1 { font-size: clamp(2rem, 12vw, 2.8rem); }
 }
 
 /* ── Désactive le curseur custom sur écrans tactiles ── */
