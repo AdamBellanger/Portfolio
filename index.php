@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contact_submit'])) {
   $contact_values = compact('name', 'email', 'subject', 'message');
 
   if ($name && filter_var($email, FILTER_VALIDATE_EMAIL) && $subject && $message) {
-    $to      = 'adam.bellanger.pro@gmail.com';
+    $to      = 'contact@adambellanger.pro';
     $headers = implode("\r\n", [
       'From: Portfolio <' . $email . '>',
       'Reply-To: ' . $email,
@@ -1286,9 +1286,9 @@ $update_label = file_exists(VEILLE_CACHE)
             </p>
 
             <div class="contact-info-links">
-              <a href="mailto:adam.bellanger.pro@gmail.com" class="cil-row">
+              <a href="mailto:contact@adambellanger.pro" class="cil-row">
                 <i class="fas fa-envelope"></i>
-                <span>adam.bellanger.pro@gmail.com</span>
+                <span>contact@adambellanger.pro</span>
                 <i class="fas fa-arrow-right cil-arrow"></i>
               </a>
               <a href="https://www.linkedin.com/in/adam-bellanger-652919386/" target="_blank" rel="noreferrer" class="cil-row">
