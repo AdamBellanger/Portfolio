@@ -563,31 +563,39 @@ $update_label = file_exists(VEILLE_CACHE)
       <div class="content-box apropos-box">
         <span class="section-label" style="text-align:center;display:block;">Qui suis-je</span>
         <p>
-          Étudiant en <strong>BTS SIO option SISR</strong> en alternance au campus IRIS Rouen, je développe un profil
-          à double compétence — <strong>infrastructure IT</strong> et <strong>développement web</strong>.
+          Étudiant en <strong>BTS SIO option SISR</strong>, je développe un profil hybride entre
+          <strong>réseau</strong>, <strong>téléphonie d'entreprise</strong> et <strong>développement web full-stack</strong>.
+          Passionné par les systèmes d'information autant que par le code, j'aime construire des choses qui
+          fonctionnent — que ce soit une infra réseau solide ou une application web déployée en production.
         </p>
         <p>
-          Côté <strong>infrastructure</strong>, j'interviens quotidiennement chez <strong>Socacom</strong> sur des missions
-          concrètes : déploiement et configuration d'équipements <strong>Cisco</strong> et <strong>Huawei</strong>,
-          mise en place de VLANs, administration de systèmes <strong>Windows Server</strong> et <strong>Linux</strong>,
-          virtualisation sous <strong>Proxmox</strong> et <strong>VMware</strong>, et gestion de la téléphonie
-          d'entreprise (<strong>Alcatel OXO</strong>, <strong>VoIP/SIP</strong>, <strong>Centrex UnyCX</strong>).
+          Côté <strong>infrastructure</strong>, j'ai une expérience concrète sur des environnements réseau
+          <strong>Huawei</strong> et <strong>Cisco</strong> : configuration de switchs, mise en place de
+          <strong>VLANs</strong>, topologies d'entreprise et <strong>routage inter-VLAN</strong>. Je travaille
+          également sur de la téléphonie d'entreprise dans ses différentes formes — <strong>Alcatel OXO</strong>,
+          <strong>Centrex UnyCX</strong>, <strong>VoIP/SIP</strong> et lignes analogiques — avec une bonne
+          compréhension des architectures de communication modernes et legacy.
         </p>
         <p>
-          Côté <strong>développement</strong>, je conçois des interfaces web immersives (React, Three.js, animations CSS)
-          et des backends robustes en <strong>PHP/MySQL</strong>, avec Python pour l'automatisation et les scripts systèmes.
-          J'administre également mon propre serveur de production <strong>Hetzner</strong> sous Nginx.
+          Côté <strong>développement</strong>, je maîtrise aussi bien le front-end que le back-end. En front, je
+          conçois des interfaces modernes avec <strong>React</strong>, <strong>TypeScript</strong> et
+          <strong>Tailwind CSS</strong>, en portant une attention particulière au design et à l'expérience
+          utilisateur. En back, je construis des APIs et des services avec <strong>Node.js</strong> et
+          <strong>PHP/MySQL</strong>. J'ai mis en production plusieurs projets personnels aboutis :
+          <strong>FloatSniper</strong> (tracker de floats CS2 en temps réel) et
+          <strong>polytrack.cloud</strong> (plateforme SaaS complète React + Node.js + PostgreSQL).
         </p>
         <p>
-          J'administre également mon propre <strong>serveur de production Hetzner</strong> sous Linux :
-          déploiement de services conteneurisés avec <strong>Docker</strong> et <strong>Docker Compose</strong>,
-          reverse proxy via <strong>Nginx Proxy Manager</strong>, gestion des certificats SSL,
-          surveillance des logs et automatisation des sauvegardes par scripts Bash.
-          Un environnement que je fais évoluer en continu, de l'infra au déploiement applicatif.
+          Au-delà du code, j'administre mon propre <strong>serveur de production sous Ubuntu</strong> avec un
+          stack <strong>Docker</strong> complet : reverse proxy via <strong>Nginx Proxy Manager</strong>,
+          monitoring avec <strong>Grafana</strong> et <strong>Uptime Kuma</strong>, base de données
+          <strong>PostgreSQL</strong>, automatisation de tâches via scripts <strong>Bash</strong> et workflows
+          <strong>n8n</strong>. Je gère l'intégralité de la chaîne, du provisionnement serveur au déploiement
+          applicatif, en passant par la gestion des certificats <strong>SSL</strong> et la surveillance des services.
         </p>
         <p>
-          L'alternance me permet de confronter chaque jour théorie et terrain, en développant une vraie réactivité
-          face aux incidents et une vision globale des systèmes d'information.
+          Ce double ancrage — <strong>systèmes et développement</strong> — me permet d'avoir une vision globale
+          des projets tech, de l'infrastructure qui les supporte jusqu'à l'interface que l'utilisateur final utilise.
         </p>
       </div>
     </div>
