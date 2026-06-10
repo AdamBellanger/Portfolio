@@ -1487,11 +1487,11 @@ $update_label = file_exists(VEILLE_CACHE)
         <span class="lg-link-label">OpenWhisper</span>
         <span class="lg-link-desc">Transcription audio</span>
       </a>
-      <a href="https://www.linkedin.com/in/adam-bellanger" target="_blank" rel="noreferrer" class="lg-link">
+      <a href="https://www.linkedin.com/in/adam-bellanger-652919386/" target="_blank" rel="noreferrer" class="lg-link">
         <span class="lg-link-label">LinkedIn</span>
         <span class="lg-link-desc">Mon profil</span>
       </a>
-      <a href="https://www.iris-formation.fr" target="_blank" rel="noreferrer" class="lg-link">
+      <a href="https://ecoleiris.fr/campus/rouen" target="_blank" rel="noreferrer" class="lg-link">
         <span class="lg-link-label">IRIS</span>
         <span class="lg-link-desc">Mon école</span>
       </a>

@@ -1593,6 +1593,7 @@ nav.github-pill a.nav-link.active {
   gap: 5px;
   transition: background 0.3s, transform 0.2s;
 }
+.nav-burger { display: none; }
 .nav-burger:active { transform: scale(0.92); }
 .nav-burger span {
   display: block;
@@ -1610,7 +1611,7 @@ nav.github-pill a.nav-link.active {
 
 /* ════════ LAPTOP (≤ 1200px) ════════ */
 @media (max-width: 1200px) {
-  .section-wide .container { max-width: 1100px; }
+  .section-wide .container { max-width: 768px; }
   nav.github-pill a.nav-link { font-size: 0.82rem; padding: 8px 12px; }
 }
 
@@ -1626,7 +1627,7 @@ nav.github-pill a.nav-link.active {
 }
 
 /* ════════ NAV MOBILE / TABLETTE (≤ 1100px) ════════ */
-@media (max-width: 1100px) {
+@media (max-width: 768px) {
   .nav-burger { display: flex; }
 
   nav.github-pill {
@@ -1754,10 +1755,10 @@ nav.github-pill a.nav-link.active {
   position: fixed;
   top: 22px;
   right: 22px;
-  z-index: 1003;
+  z-index: 1010;
 }
 /* Masqué sous 1100px pour ne pas chevaucher le burger mobile (.nav-burger) */
-@media (max-width: 1100px) {
+@media (max-width: 768px) {
   .lg-burger-wrap { display: none; }
 }
 
