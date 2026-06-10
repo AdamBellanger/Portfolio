@@ -345,4 +345,39 @@ document.addEventListener('DOMContentLoaded', function () {
     stats.forEach(function (el) { counterObs.observe(el); });
   }
 
+  // 10) Burger liquid glass – liens externes (desktop)
+  (function initLiquidBurger() {
+    const wrap   = document.getElementById('lg-burger-wrap');
+    const burger = document.getElementById('lg-burger');
+    if (!wrap || !burger) return;
+
+    function open() {
+      wrap.classList.add('open');
+      burger.classList.add('active');
+      burger.setAttribute('aria-expanded', 'true');
+    }
+    function close() {
+      wrap.classList.remove('open');
+      burger.classList.remove('active');
+      burger.setAttribute('aria-expanded', 'false');
+    }
+
+    // Toggle au clic
+    burger.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (wrap.classList.contains('open')) close();
+      else open();
+    });
+
+    // Fermeture au clic extérieur
+    document.addEventListener('mousedown', function (e) {
+      if (wrap.classList.contains('open') && !wrap.contains(e.target)) close();
+    });
+
+    // Fermeture à la touche Échap
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+    });
+  })();
+
 });

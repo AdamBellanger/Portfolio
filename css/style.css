@@ -1748,3 +1748,114 @@ nav.github-pill a.nav-link.active {
 }
 
 
+
+/* ════════ BURGER LIQUID GLASS — liens externes (desktop only) ════════ */
+.lg-burger-wrap {
+  position: fixed;
+  top: 22px;
+  right: 22px;
+  z-index: 1003;
+}
+/* Masqué sous 1100px pour ne pas chevaucher le burger mobile (.nav-burger) */
+@media (max-width: 1100px) {
+  .lg-burger-wrap { display: none; }
+}
+
+.lg-burger {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: background 0.25s, transform 0.2s;
+}
+.lg-burger:hover { background: rgba(255, 255, 255, 0.14); }
+.lg-burger:active { transform: scale(0.93); }
+.lg-burger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: #e7e9ee;
+  border-radius: 2px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
+}
+.lg-burger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.lg-burger.active span:nth-child(2) { opacity: 0; }
+.lg-burger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Panneau — s'ouvre à GAUCHE du bouton */
+.lg-panel {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 12px);
+  width: 250px;
+  padding: 8px;
+  background: rgba(44, 48, 58, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transform-origin: top right;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(12px) scale(0.92);
+  transition: opacity 0.25s ease, transform 0.3s ease, visibility 0.25s;
+}
+.lg-burger-wrap.open .lg-panel {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  animation: burger-menu-in 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes burger-menu-in {
+  from { opacity: 0; transform: translateX(12px) scale(0.92); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.lg-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  text-decoration: none;
+  transition: background 0.2s;
+  opacity: 0;
+}
+.lg-link:hover { background: rgba(255, 255, 255, 0.08); }
+.lg-link-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #f2f4f8;
+}
+.lg-link-desc {
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+.lg-burger-wrap.open .lg-link {
+  animation: burger-link-in 0.4s ease forwards;
+}
+.lg-burger-wrap.open .lg-link:nth-child(1) { animation-delay: 0.08s; }
+.lg-burger-wrap.open .lg-link:nth-child(2) { animation-delay: 0.14s; }
+.lg-burger-wrap.open .lg-link:nth-child(3) { animation-delay: 0.20s; }
+.lg-burger-wrap.open .lg-link:nth-child(4) { animation-delay: 0.26s; }
+.lg-burger-wrap.open .lg-link:nth-child(5) { animation-delay: 0.32s; }
+@keyframes burger-link-in {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}

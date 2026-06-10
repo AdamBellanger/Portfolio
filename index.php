@@ -527,17 +527,6 @@ $update_label = file_exists(VEILLE_CACHE)
     <a href="#veille" class="nav-link">Veille</a>
     <a href="#apprentissage" class="nav-link">Apprentissage</a>
     <a href="#contact" class="nav-link">Contact</a>
-    <div class="nav-icons">
-      <a href="https://ecoleiris.fr/campus/rouen" target="_blank" rel="noreferrer" title="École IRIS">
-        <i class="fas fa-graduation-cap"></i>
-      </a>
-      <a href="https://www.linkedin.com/in/adam-bellanger-652919386/" target="_blank" rel="noreferrer" title="LinkedIn">
-        <i class="fab fa-linkedin"></i>
-      </a>
-      <a href="https://github.com/AdamBellanger" target="_blank" rel="noreferrer" title="GitHub">
-        <i class="fab fa-github"></i>
-      </a>
-    </div>
   </nav>
 
   <!-- ACCUEIL -->
@@ -1483,6 +1472,35 @@ $update_label = file_exists(VEILLE_CACHE)
   <button id="scroll-top-btn" title="Retour en haut">
     <i class="fas fa-chevron-up"></i>
   </button>
+
+  <!-- BURGER LIQUID GLASS — liens externes (desktop) -->
+  <div class="lg-burger-wrap" id="lg-burger-wrap">
+    <button class="lg-burger" id="lg-burger" aria-label="Liens externes" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="lg-panel" id="lg-panel">
+      <a href="https://qrdrop.online" target="_blank" rel="noreferrer" class="lg-link">
+        <span class="lg-link-label">QRDrop</span>
+        <span class="lg-link-desc">Générateur de QR codes</span>
+      </a>
+      <a href="https://whisper.adambellanger.pro" target="_blank" rel="noreferrer" class="lg-link">
+        <span class="lg-link-label">OpenWhisper</span>
+        <span class="lg-link-desc">Transcription audio</span>
+      </a>
+      <a href="https://www.linkedin.com/in/adam-bellanger" target="_blank" rel="noreferrer" class="lg-link">
+        <span class="lg-link-label">LinkedIn</span>
+        <span class="lg-link-desc">Mon profil</span>
+      </a>
+      <a href="https://www.iris-formation.fr" target="_blank" rel="noreferrer" class="lg-link">
+        <span class="lg-link-label">IRIS</span>
+        <span class="lg-link-desc">Mon école</span>
+      </a>
+      <a href="https://github.com/AdamBellanger" target="_blank" rel="noreferrer" class="lg-link">
+        <span class="lg-link-label">GitHub</span>
+        <span class="lg-link-desc">Mon code source</span>
+      </a>
+    </div>
+  </div>
 
 </body>
 </html>
